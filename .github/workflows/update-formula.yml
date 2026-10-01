@@ -1,0 +1,52 @@
+name: Update formula
+
+# Points Formula/plugview.rb at the latest plugview release. Runs on a schedule so no cross-repository
+# token is needed; run it by hand right after a release to publish immediately.
+on:
+  schedule:
+    - cron: "17 */6 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Read latest release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          tag="$(gh release view --repo MauricioLeon54/plugview --json tagName --jq .tagName)"
+          version="${tag#v}"
+          sha256="$(curl -fsSL "https://github.com/MauricioLeon54/plugview/releases/download/$tag/plugview-macos-universal.tar.gz.sha256" | cut -d ' ' -f 1)"
+          if ! [[ "$sha256" =~ ^[0-9a-f]{64}$ ]]; then
+            echo "::error::No valid checksum published for $tag"
+            exit 1
+          fi
+          echo "TAG=$tag" >> "$GITHUB_ENV"
+          echo "VERSION=$version" >> "$GITHUB_ENV"
+          echo "SHA256=$sha256" >> "$GITHUB_ENV"
+
+      - name: Rewrite formula
+        run: |
+          sed -i -E \
+            -e "s|releases/download/v[^/]+/|releases/download/$TAG/|" \
+            -e "s|^  version \".*\"|  version \"$VERSION\"|" \
+            -e "s|^  sha256 \".*\"|  sha256 \"$SHA256\"|" \
+            Formula/plugview.rb
+          git diff
+
+      - name: Commit if changed
+        run: |
+          if git diff --quiet; then
+            echo "Formula already at $VERSION"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -am "plugview $VERSION"
+          git push
