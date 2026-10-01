@@ -1,8 +1,8 @@
 class Plugview < Formula
   desc "Low-latency viewer for HDMI capture cards (Switch, PlayStation, Xbox)"
   homepage "https://plugview.app"
-  url "https://github.com/plugview/plugview/releases/download/v0.1.0/plugview-macos-universal.tar.gz"
-  sha256 "2001a21d21d22c6e3367b9c076d94d4b790709cb054f23735994c82727a4e755"
+  url "https://github.com/plugview/plugview/releases/download/v0.2.0/plugview-macos-universal.tar.gz"
+  sha256 "97d5547812af0d827f9d0ba401ae515eb60dfe0201e5757584e3525607834539"
   license "MIT"
 
   depends_on macos: :sonoma
