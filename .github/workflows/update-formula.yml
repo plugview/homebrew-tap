@@ -1,6 +1,6 @@
 name: Update formula
 
-# Points Formula/plugview.rb at the latest plugview release. Runs on a schedule so no cross-repository
+# Points Formula/plugview.rb and Casks/plugview.rb at the latest plugview release. Runs on a schedule so no cross-repository
 # token is needed; run it by hand right after a release to publish immediately.
 on:
   schedule:
@@ -22,21 +22,32 @@ jobs:
         run: |
           tag="$(gh release view --repo plugview/plugview --json tagName --jq .tagName)"
           version="${tag#v}"
-          sha256="$(curl -fsSL "https://github.com/plugview/plugview/releases/download/$tag/plugview-macos-universal.tar.gz.sha256" | cut -d ' ' -f 1)"
-          if ! [[ "$sha256" =~ ^[0-9a-f]{64}$ ]]; then
-            echo "::error::No valid checksum published for $tag"
-            exit 1
-          fi
+          checksum() {
+            curl -fsSL "https://github.com/plugview/plugview/releases/download/$tag/$1.sha256" | cut -d ' ' -f 1
+          }
+          sha256="$(checksum plugview-macos-universal.tar.gz)"
+          app_sha256="$(checksum plugview-macos-app.zip)"
+          for value in "$sha256" "$app_sha256"; do
+            if ! [[ "$value" =~ ^[0-9a-f]{64}$ ]]; then
+              echo "::error::No valid checksum published for $tag"
+              exit 1
+            fi
+          done
           echo "TAG=$tag" >> "$GITHUB_ENV"
           echo "VERSION=$version" >> "$GITHUB_ENV"
           echo "SHA256=$sha256" >> "$GITHUB_ENV"
+          echo "APP_SHA256=$app_sha256" >> "$GITHUB_ENV"
 
-      - name: Rewrite formula
+      - name: Rewrite formula and cask
         run: |
           sed -i -E \
             -e "s|releases/download/v[^/]+/|releases/download/$TAG/|" \
             -e "s|^  sha256 \".*\"|  sha256 \"$SHA256\"|" \
             Formula/plugview.rb
+          sed -i -E \
+            -e "s|^  version \".*\"|  version \"$VERSION\"|" \
+            -e "s|^  sha256 \".*\"|  sha256 \"$APP_SHA256\"|" \
+            Casks/plugview.rb
           git diff
 
       - name: Commit if changed
