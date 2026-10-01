@@ -35,7 +35,6 @@ jobs:
         run: |
           sed -i -E \
             -e "s|releases/download/v[^/]+/|releases/download/$TAG/|" \
-            -e "s|^  version \".*\"|  version \"$VERSION\"|" \
             -e "s|^  sha256 \".*\"|  sha256 \"$SHA256\"|" \
             Formula/plugview.rb
           git diff
