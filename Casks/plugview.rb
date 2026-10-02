@@ -1,6 +1,6 @@
 cask "plugview" do
-  version "0.2.0"
-  sha256 "2cccb5f24de7fc3afa140d8c3c8bcc87f1377f771c2f22e87ffb91950636202c"
+  version "0.3.0"
+  sha256 "066b6256387d94a042cbc5ac29c87dc5be8e99a46627d6086e9202182a3002f6"
 
   url "https://github.com/plugview/plugview/releases/download/v#{version}/plugview-macos-app.zip"
   name "plugview"
